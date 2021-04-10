@@ -1,11 +1,14 @@
 from .security_manager import SecurityManager
 from .models import User, Group
+#from werkzeug.local import LocalProxy
 from flask.cli import AppGroup
+#from flask import current_app
 import click
 
-
+#user_datastore
 security_cli = AppGroup('security')
-
+#_security = LocalProxy(lambda: current_app.extensions["security"])
+#_datastore = LocalProxy(lambda: current_app.extensions["security"].datastore)
 
 @security_cli.command('get', help='email')
 @click.argument('email')
@@ -18,14 +21,11 @@ def get_user_cli(email=None):
 def add_group_cli(group_name, admin_user_email):
     user = User.query.filter_by(email=admin_user_email).first()
     if not user:
-        click.echo('Failed: User does not exist.')
-        return None
+        raise click.UsageError('User not found.')
     if user.group:
-        click.echo('Failed: User already part of another group')
-        return None
+        raise click.UsageError('User already part of another group')
     if user.group_admin:
-        click.echo('Failed: User already admin of another group')
-        return None
+        raise click.UsageError('User already admin of another group')
     group = Group(name=group_name)
     security_manager = SecurityManager()
     group = security_manager.add_group(group)
