@@ -1,0 +1,4 @@
+include LICENSE
+include README.md
+recursive-include flask_security/static *
+recursive-include flask_security/templates *

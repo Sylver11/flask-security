@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='Flask-Security',
@@ -9,7 +9,8 @@ setup(
     author_email='connectmaeuse@gmail.com',
     description='User management',
     long_description=__doc__,
-    packages=['flask_security'],
+    packages=find_packages(),
+#    packages=['flask_security'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',

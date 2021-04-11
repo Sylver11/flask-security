@@ -1,3 +1,4 @@
+from flask import current_app
 from .models import User, Group, Role
 #from .utils import config_value
 
@@ -7,10 +8,25 @@ class Datastore:
         self.db = db
 
     def commit(self):
-        self.db.session.commit()
+        from sqlalchemy.exc import IntegrityError
+        from sqlalchemy.exc import SQLAlchemyError
+        try:
+            return self.db.session.commit()
+        except IntegrityError as err:
+            self.db.session.rollback()
+            current_app.logger.info(err)
+            return 'Integrity Error: The relational integrity of the database could be adversely affected by this operation.'
+        except SQLAlchemyError as err:
+            self.db.session.rollback()
+            current_app.logger.error(err)
+            return 'Fatal database error: Server Admin was informed'
 
     def put(self, model):
-        self.db.session.add(model)
+        model = self.db.session.add(model)
+        return model
+
+    def update(self, model):
+        model = self.db.session.merge(model)
         return model
 
     def delete(self, model):
@@ -67,59 +83,53 @@ class UserDatastore(Datastore):
 #        else:
 #            return query.filter_by(**kwargs).first()
     def get_user_by_uuid(self, uuid):
-        user = User.query.filter_by(uuid=uuid).first()
-        return user
+        return User.query.filter_by(uuid=uuid).first()
+        #return user
 
     def get_user_by_email(self, email):
-        if email:
-            user = User.query.filter_by(email=email).first()
-            return user
-        users = User.query.all()
-        return users
+        return User.query.filter_by(email=email).first()
 
     def get_group_by_name(self, name):
-        group = Group.query.filter_by(name=name).first()
-        return group
+        return Group.query.filter_by(name=name).first()
+        #return group
 
-    def user_part_of_default_group(self, user_model):
-        name = self.USER_DEFAULT_GROUP_NAME
-        default_group = self.get_group_by_name(name)
-        if not default_group:
-            return False
-        if default_group.uuid == user_model.group_uuid:
-            return True
-        return False
+#    def user_part_of_default_group(self, user_model):
+#        name = self.USER_DEFAULT_GROUP_NAME
+#        default_group = self.get_group_by_name(name)
+#        if not default_group:
+#            return False
+#        if default_group.uuid == user_model.group_uuid:
+#            return True
+#        return False
 
 
     def add_user(self, user_model):
-        from sqlalchemy.exc import IntegrityError
-        try:
-            new_user = db.session.add(user_model)
-            db.session.commit()
-        except IntegrityError as err:
-            db.session.rollback()
-            return 'User already exists'
-        return user_model
+        new_user = self.put(user_model)
+        self.commit()
+        return new_user
 
     def update_user(self, user):
-        user = db.session.merge(user)
-        db.session.commit()
+        user = self.update(user)
+        self.commit()
         return user
 
     def delete_user(self, user):
-        db.session.delete(user)
-        db.session.commit()
-        return None
+        self.delete(user)
+        return self.commit()
 
     def add_group(self, group_model):
-        from sqlalchemy.exc import IntegrityError
-        try:
-            new_group = db.session.add(group_model)
-            db.session.commit()
-        except IntegrityError as err:
-            db.session.rollback()
-            return 'Group already exists'
-        return group_model
+        new_group = self.put(group_model)
+        self.commit()
+        return new_group
+
+    def update_group(self, group_model):
+        group = self.update(group_model)
+        self.commit()
+        return group
+
+    def delete_group(self, group_model):
+        group = self.update(group_model)
+        return self.commit()
 
     def find_role(self, role):
         return self.role_model.query.filter_by(name=role).first()

@@ -17,19 +17,18 @@ class SecurityManager(SecurityManager__Settings,
     def init_security(self, app):
         app.manager = self
         self.login_manager = LoginManager(app)
-        self.login_manager.login_view = 'security_bp.login'
+        self.login_manager.login_view = 'flask_security_bp.login'
         @self.login_manager.user_loader
         def load_user(uuid):
             return self.user_datastore.get_user_by_uuid(uuid)
-            #return User.query.filter_by(uuid=uuid).first()
 
-        blueprint = Blueprint(
-                'security_bp',
+        flask_security = Blueprint(
+                'flask_security_bp',
                 __name__,
                 template_folder='templates',
                 static_folder='static',)
 
-        app.register_blueprint(blueprint)
+        app.register_blueprint(flask_security)
 
         self._add_url_routes(app)
 
@@ -60,12 +59,12 @@ class SecurityManager(SecurityManager__Settings,
             return self.logout_view()
 
         def register_stub():
-            if not self.USER_ENABLE_REGISTER: abort(404)
+            if not self.FLASK_SECURITY_ENABLE_REGISTER: abort(404)
             return self.register_view()
 
 
-        app.add_url_rule(self.USER_TEST_URL, 'user_bp.test', test_stub, methods=['GET', 'POST'])
-        app.add_url_rule(self.USER_REGISTER_URL, 'user_bp.register', register_stub, methods=['GET', 'POST'])
-        app.add_url_rule(self.USER_LOGOUT_URL, 'user_bp.logout', logout_stub, methods=['GET', 'POST'])
-        app.add_url_rule(self.USER_LOGIN_URL, 'user_bp.login', login_stub, methods=['GET', 'POST'])
+        app.add_url_rule(self.FLASK_SECURITY_TEST_URL, 'flask_security_bp.test', test_stub, methods=['GET', 'POST'])
+        app.add_url_rule(self.FLASK_SECURITY_REGISTER_URL, 'flask_security_bp.register', register_stub, methods=['GET', 'POST'])
+        app.add_url_rule(self.FLASK_SECURITY_LOGOUT_URL, 'flask_security_bp.logout', logout_stub, methods=['GET', 'POST'])
+        app.add_url_rule(self.FLASK_SECURITY_LOGIN_URL, 'flask_security_bp.login', login_stub, methods=['GET', 'POST'])
 

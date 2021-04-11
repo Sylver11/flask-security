@@ -1,15 +1,15 @@
 class SecurityManager__Settings(object):
 
-    USER_ENABLE_REGISTER = True
-    USER_SET_DB_DEFAULTS = True
-    USER_DEFAULT_ROLE_NAME = 'user'
-    USER_DEFAULT_ROLE_DESCRIPTION = 'Normal User'
-    USER_TEST_URL = '/security/test'
-    USER_LOGIN_URL = '/login'
-    USER_LOGOUT_URL = '/logout'
-    USER_REGISTER_URL = '/register'
-    USER_LOGIN_TEMPLATE = 'security/login.html' #:
-    USER_REGISTER_TEMPLATE = 'security/register.html' #:
-    USER_FORGOT_PASSWORD_TEMPLATE = 'security/forgot_password.html' #:
-    USER_CONFIRM_EMAIL_TEMPLATE = 'security/emails/confirm_email' #:
-    USER_AFTER_LOGOUT_URL = '/'
+    FLASK_SECURITY_ENABLE_REGISTER = False
+    FLASK_SECURITY_SET_DB_DEFAULTS = True
+    FLASK_SECURITY_DEFAULT_ROLE_NAME = 'user'
+    FLASK_SECURITY_DEFAULT_ROLE_DESCRIPTION = 'Normal User'
+    FLASK_SECURITY_TEST_URL = '/security/test'
+    FLASK_SECURITY_LOGIN_URL = '/login'
+    FLASK_SECURITY_LOGOUT_URL = '/logout'
+    FLASK_SECURITY_REGISTER_URL = '/register'
+    FLASK_SECURITY_LOGIN_TEMPLATE = 'flask_security/login.html' #:
+    FLASK_SECURITY_REGISTER_TEMPLATE = 'flask_security/register.html' #:
+    FLASK_SECURITY_FORGOT_PASSWORD_TEMPLATE = 'flask_security/forgot_password.html' #:
+    FLASK_SECURITY_CONFIRM_EMAIL_TEMPLATE = 'flask_security/emails/confirm_email' #:
+    FLASK_SECURITY_AFTER_LOGOUT_URL = '/'
