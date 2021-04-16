@@ -13,7 +13,7 @@ def catch_view_exception(f):
         try:
             return f(*args, **kwargs)
         except Exception as ex:
-            template = 'User uuid:{}\nIP:{}\nRequested URL:{}\nTraceback:{}'
+            template = 'User uuid:{}\nIP:{}\nRequested URL:{}'
             request_remote_addr = request_url = user_uuid = 'Unknown'
             post = False
             if has_request_context():
@@ -26,8 +26,7 @@ def catch_view_exception(f):
             admin_error_message = template.format(
                     user_uuid,
                     request_remote_addr,
-                    request_url,
-                    traceback.format_exc())
+                    request_url,)
             current_app.logger.error(admin_error_message)
             template = 'An exception of type {0} occurred. Arguments:\n{1!r}'
             user_error_message = template.format(type(ex).__name__, ex.args)

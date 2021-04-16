@@ -1,7 +1,6 @@
 from flask_login import current_user, login_required, login_user, logout_user
-from flask import render_template, redirect, url_for, request
-from application.decorators import catch_view_exception
-#from .models import User
+from flask import render_template, redirect, url_for, request, current_app
+from .decorators import catch_view_exception
 
 class SecurityManager__Views(object):
 
@@ -13,11 +12,17 @@ class SecurityManager__Views(object):
             email = request.form['email']
             password = request.form['password']
             user = self.user_datastore.get_user_by_email(email)
+            if not user:
+                current_app.logger.info('%s does not exist', email)
+                return 'User does not exist'
             if user.check_password(password):
                 login_user(user)
                 user.authenticated = True
                 self.user_datastore.update_user(user)
                 return redirect(url_for('home_bp.index'))
+            else:
+                current_app.logger.info('%s failed to log in', email)
+                return 'Password is incorrect'
         return render_template(self.FLASK_SECURITY_LOGIN_TEMPLATE)
 
     @catch_view_exception
