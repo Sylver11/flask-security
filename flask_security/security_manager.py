@@ -26,7 +26,7 @@ class SecurityManager(SecurityManager__Settings,
                 'flask_security_bp',
                 __name__,
                 template_folder='templates',
-                static_folder='static',)
+                static_folder='static')
 
         app.register_blueprint(flask_security)
 

@@ -1,5 +1,5 @@
 from flask_login import current_user, login_required, login_user, logout_user
-from flask import render_template, redirect, url_for, request, current_app
+from flask import render_template, redirect, url_for, request, current_app, jsonify
 from .decorators import catch_view_exception
 
 class SecurityManager__Views(object):
@@ -14,15 +14,33 @@ class SecurityManager__Views(object):
             user = self.user_datastore.get_user_by_email(email)
             if not user:
                 current_app.logger.info('%s does not exist', email)
-                return 'User does not exist'
+                return jsonify({
+                    'status': 401,
+                    'redirect': False,
+                    'address': None,
+                    'message': 'Incorrect Email or Password',
+                    'model': None
+                    })
             if user.check_password(password):
                 login_user(user)
                 user.authenticated = True
                 self.user_datastore.update_user(user)
-                return redirect(url_for('home_bp.index'))
+                return jsonify({
+                    'status': 200,
+                    'redirect': True,
+                    'address': '/',
+                    'message': 'Successully logged in',
+                    'model': user
+                    })
             else:
                 current_app.logger.info('%s failed to log in', email)
-                return 'Password is incorrect'
+                return jsonify({
+                    'status': 401,
+                    'redirect': False,
+                    'address': None,
+                    'message': 'Incorrect Email or Password',
+                    'model': None
+                    })
         return render_template(self.FLASK_SECURITY_LOGIN_TEMPLATE)
 
     @catch_view_exception

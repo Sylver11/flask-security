@@ -1,14 +1,15 @@
 {% extends 'flask_security/layout.html' %}
 {% block content %}
+<script src="{{url_for('flask_security_bp.static', filename='flask_security/js/login_form.js')}}"></script>
 <div class="signin-wrapper text-center">
-  <form method="post" class="form-signin">
+  <form method="post" action="/login" id="form_login">
     <div class="row">
       <div>
         <h4>Normal login</h4>
         <label for="input_login_email">Email</label>
-        <input id="input_login_email" name="email" type="text" placeholder="Email">
+        <input id="input_login_email" name="email" type="email" placeholder="Email" required>
         <label for="input_login_password">Password</label>
-        <input id="input_login_password" name="password" type="password" placeholder="Password">
+        <input id="input_login_password" name="password" type="password" placeholder="Password" required>
         <input type="submit" value="Login">
       </div>
         <div class="col-md-9" style="margin: auto">
@@ -22,4 +23,29 @@
     <p class="mt-5 mb-3 text-muted">&copy; 2021</p>
   </form>
 </div>
+<script>
+$(function () {
+    $("#form_login").submit(function (e) {
+        e.preventDefault();
+    }).validate({
+        submitHandler: function (form) {
+            $.ajax({
+                url: form.action,
+                type: form.method,
+                data: $(form).serialize(),
+                success: function (data) {
+                    if (data.status == 200) {
+                        window.location.replace("/");
+                    } else {
+                        $.notify(data.message, "error");
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    $.notify(thrownError + "(" + xhr.status + "): " + xhr.responseText, "error");
+                }
+            })
+        }
+    });
+})
+</script>
 {% endblock %}
