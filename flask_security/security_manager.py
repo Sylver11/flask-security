@@ -1,21 +1,25 @@
 from flask_login import LoginManager
-from flask import Blueprint
+from flask import Blueprint, current_app
 from .security_manager__settings import SecurityManager__Settings
 from .security_manager__views import SecurityManager__Views
 from .security_manager__utils import SecurityManager__Utils
+
 
 class SecurityManager(SecurityManager__Settings,
         SecurityManager__Views,
         SecurityManager__Utils):
 
-    def __init__(self, app=None, user_datastore=None):
+    def __init__(self, app=None, datastore=None):
         self.app = app
-        self.user_datastore = user_datastore
-        if app:
-            self.init_security(app)
+        #self._datastore = datastore
+        self._state = None
+        if app is not None and datastore is not None:
+            self._state = self.init_app(app, datastore)
+            app.extensions["security"] = self._state
 
-    def init_security(self, app):
-        app.manager = self
+    def init_app(self, app, datastore):
+        #app.manager = self
+        self._datastore = datastore
         self.login_manager = LoginManager(app)
         self.login_manager.login_view = 'flask_security_bp.login'
         @self.login_manager.user_loader
@@ -26,7 +30,8 @@ class SecurityManager(SecurityManager__Settings,
                 'flask_security_bp',
                 __name__,
                 template_folder='templates',
-                static_folder='static')
+                static_folder='static',
+                static_url_path='/static/flask_security')
 
         app.register_blueprint(flask_security)
 
@@ -34,6 +39,8 @@ class SecurityManager(SecurityManager__Settings,
 
         from .cli import security_cli
         app.cli.add_command(security_cli)
+
+        return self
 
         #if self.USER_SET_DB_DEFAULTS:
 #            role_name = self.USER_DEFAULT_ROLE_NAME

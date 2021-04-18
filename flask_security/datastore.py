@@ -1,6 +1,5 @@
 from flask import current_app
 from .models import User, Group, Role
-#from .utils import config_value
 
 
 class Datastore:
@@ -20,14 +19,14 @@ class Datastore:
             self.db.session.rollback()
             current_app.logger.error(err)
             return 'Fatal database error: Server Admin was informed'
+#        finally:
+#            self.db.session.close()
 
     def put(self, model):
-        model = self.db.session.add(model)
-        return model
+        self.db.session.add(model)
 
     def update(self, model):
-        model = self.db.session.merge(model)
-        return model
+        self.db.session.merge(model)
 
     def delete(self, model):
         self.db.session.delete(model)
@@ -83,14 +82,14 @@ class UserDatastore(Datastore):
 #        else:
 #            return query.filter_by(**kwargs).first()
     def get_user_by_uuid(self, uuid):
-        return User.query.filter_by(uuid=uuid).first()
+        return self.user_model.query.filter_by(uuid=uuid).first()
         #return user
 
     def get_user_by_email(self, email):
-        return User.query.filter_by(email=email).first()
+        return self.user_model.query.filter_by(email=email).first()
 
     def get_group_by_name(self, name):
-        return Group.query.filter_by(name=name).first()
+        return self.group_model.query.filter_by(name=name).first()
         #return group
 
 #    def user_part_of_default_group(self, user_model):
@@ -104,31 +103,39 @@ class UserDatastore(Datastore):
 
 
     def add_user(self, user_model):
-        new_user = self.put(user_model)
-        self.commit()
-        return new_user
+        self.put(user_model)
+        feedback = self.commit()
+        if feedback is None:
+            return user_model
+        return feedback
 
-    def update_user(self, user):
-        user = self.update(user)
-        self.commit()
-        return user
+    def update_user(self, user_model):
+        self.update(user)
+        feedback = self.commit()
+        if feedback is None:
+            return user_model
+        return feedback
 
     def delete_user(self, user):
         self.delete(user)
-        return self.commit()
+        return self.commit(user)
 
     def add_group(self, group_model):
-        new_group = self.put(group_model)
-        self.commit()
-        return new_group
+        self.put(group_model)
+        feedback = self.commit()
+        if feedback is None:
+            return group_model
+        return feedback
 
     def update_group(self, group_model):
-        group = self.update(group_model)
-        self.commit()
-        return group
+        self.update(group_model)
+        feedback = self.commit()
+        if feedback is None:
+            return group_model
+        return feedback
 
     def delete_group(self, group_model):
-        group = self.update(group_model)
+        self.delete(group_model)
         return self.commit()
 
     def find_role(self, role):
