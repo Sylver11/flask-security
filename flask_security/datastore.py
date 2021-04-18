@@ -110,7 +110,7 @@ class UserDatastore(Datastore):
         return feedback
 
     def update_user(self, user_model):
-        self.update(user)
+        self.update(user_model)
         feedback = self.commit()
         if feedback is None:
             return user_model

@@ -24,7 +24,7 @@ class SecurityManager(SecurityManager__Settings,
         self.login_manager.login_view = 'flask_security_bp.login'
         @self.login_manager.user_loader
         def load_user(uuid):
-            return self.user_datastore.get_user_by_uuid(uuid)
+            return self._datastore.get_user_by_uuid(uuid)
 
         flask_security = Blueprint(
                 'flask_security_bp',

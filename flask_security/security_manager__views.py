@@ -1,17 +1,16 @@
 from flask_login import current_user, login_required, login_user, logout_user
 from flask import render_template, redirect, url_for, request, current_app, jsonify
-from .decorators import catch_view_exception
 
 class SecurityManager__Views(object):
 
-    @catch_view_exception
     def login_view(self):
         if current_user.is_authenticated:
             return redirect(url_for('home_bp.index'))
         if request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
-            user = self.user_datastore.get_user_by_email(email)
+            user = self._datastore.get_user_by_email(email)
+            number = 5 / 0
             if not user:
                 current_app.logger.info('%s does not exist', email)
                 return jsonify({
@@ -24,13 +23,13 @@ class SecurityManager__Views(object):
             if user.check_password(password):
                 login_user(user)
                 user.authenticated = True
-                self.user_datastore.update_user(user)
+                self._datastore.update_user(user)
                 return jsonify({
                     'status': 200,
                     'redirect': True,
                     'address': '/',
                     'message': 'Successully logged in',
-                    'model': user
+                    'model': None
                     })
             else:
                 current_app.logger.info('%s failed to log in', email)
@@ -43,10 +42,9 @@ class SecurityManager__Views(object):
                     })
         return render_template(self.FLASK_SECURITY_LOGIN_TEMPLATE)
 
-    @catch_view_exception
     def logout_view(self):
         current_user.authenticated = False
-        self.user_datastore.update_user(current_user)
+        self._datastore.update_user(current_user)
         logout_user()
         return redirect(self.FLASK_SECURITY_AFTER_LOGOUT_URL)
 
