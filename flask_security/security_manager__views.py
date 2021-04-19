@@ -10,7 +10,6 @@ class SecurityManager__Views(object):
             email = request.form['email']
             password = request.form['password']
             user = self._datastore.get_user_by_email(email)
-            number = 5 / 0
             if not user:
                 current_app.logger.info('%s does not exist', email)
                 return jsonify({

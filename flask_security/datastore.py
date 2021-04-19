@@ -1,5 +1,5 @@
 from flask import current_app
-from .models import User, Group, Role
+#from .models import User, Group, Role
 
 
 class Datastore:
@@ -34,11 +34,11 @@ class Datastore:
 
 class UserDatastore(Datastore):
 
-    def __init__(self, db):
+    def __init__(self, db, user_model, group_model, role_model):
         Datastore.__init__(self, db)
-        self.user_model = User
-        self.group_model = Group
-        self.role_model = Role
+        self.user_model = user_model
+        self.group_model = group_model
+        self.role_model = role_model
 
 #    def _prepare_role_modify_args(self, role):
 #        if isinstance(role, str):
