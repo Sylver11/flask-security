@@ -11,14 +11,12 @@ class SecurityManager(SecurityManager__Settings,
 
     def __init__(self, app=None, datastore=None):
         self.app = app
-        #self._datastore = datastore
         self._state = None
         if app is not None and datastore is not None:
             self._state = self.init_app(app, datastore)
             app.extensions["security"] = self._state
 
     def init_app(self, app, datastore):
-        #app.manager = self
         self._datastore = datastore
         self.login_manager = LoginManager(app)
         self.login_manager.login_view = 'flask_security_bp.login'
@@ -32,27 +30,11 @@ class SecurityManager(SecurityManager__Settings,
                 template_folder='templates',
                 static_folder='static',
                 static_url_path='/static/flask_security')
-
         app.register_blueprint(flask_security)
-
         self._add_url_routes(app)
-
         from .cli import security_cli
         app.cli.add_command(security_cli)
-
-        return self
-
-        #if self.USER_SET_DB_DEFAULTS:
-#            role_name = self.USER_DEFAULT_ROLE_NAME
-#            role_description = self.USER_DEFAULT_ROLE_DESCRIPTION
-#
-#            @app.before_request
-#            def check_security_db_defaults():
-#                role = Role.query.filter_by(name=role_name).first()
-#                if not role:
-#                    role = Role(name=role_name, description=role_description)
-#                    db.session.add(role)
-#                self.db.session.commit()
+        return None
 
     def _add_url_routes(self, app):
 
