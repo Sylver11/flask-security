@@ -1,5 +1,5 @@
 from werkzeug.local import LocalProxy
-from flask.cli import AppGroup
+from flask.cli import AppGroup, with_appcontext
 from flask import current_app
 import click
 
@@ -7,6 +7,14 @@ security_cli = AppGroup('security')
 
 _security = LocalProxy(lambda: current_app.extensions["security"])
 _datastore = LocalProxy(lambda: _security._datastore)
+
+
+@with_appcontext
+def check_if_user_exists_cli(ctx, param, email):
+    user = _datastore.get_user_by_email(email)
+    if not user:
+        raise click.UsageError('The specified user does not exist')
+    return user.email
 
 @security_cli.command('get', help='email')
 @click.argument('email')
@@ -51,8 +59,8 @@ def add_group_cli(group_name, admin_user_email):
         default='None',
         help='Leave empty for default')
 def add_user_cli(firstname, secondname, email, password, group):
-    user_model = _datastore.user_model
-    user = user_model(
+    User = _datastore.user_model
+    user = User(
             firstname=firstname,
             secondname=secondname,
             email=email)
@@ -63,7 +71,7 @@ def add_user_cli(firstname, secondname, email, password, group):
             raise click.UsageError('The specified group does not exist')
         user.group = group
     user = _datastore.add_user(user)
-    if isinstance(user, user_model):
+    if isinstance(user, User):
         if user.uuid:
             feedback = 'Success: User created'
             if user.group:
@@ -75,6 +83,45 @@ def add_user_cli(firstname, secondname, email, password, group):
     else:
         raise click.UsageError('User already exists')
     return None
+
+
+@security_cli.command('add-user-role',)
+@click.option('--role_name', prompt='Role Name',required=True)
+@click.option('--role_description', prompt='Role Description',required=True)
+def add_user_role_cli(name, description):
+    role = _datastore.get_role_by_name(name)
+    if role:
+        raise click.UsageError('The specified role already exists')
+    feedback = _datastore.add_user_role(name=name,description=description)
+    if isinstance(feedback, str):
+        raise click.UsageError(feeback)
+    click.echo('Successfully created user role: ' + role.name)
+    return None
+
+
+@security_cli.command('show-available-roles',)
+def get_all_roles_cli():
+    click.echo([r.name for r in _datastore.get_roles()])
+
+
+@security_cli.command('link-role-user')
+@click.option('--email',
+        prompt='User Email',
+        callback=check_if_user_exists_cli,
+        required=True)
+@click.option(
+        '--role-name',
+        prompt='Name of user role')
+@click.pass_context
+def link_role_with_user(email, role_name):
+    user = _datastore.get_user_by_email(email)
+    role = _datastore.get_role_by_name(role_name)
+    if not role:
+        raise click.UsageError('The specified role does not exist')
+    user.add_roles(role)
+    click.echo('Successfully linked ' + user.name + ' with ' + role.name )
+    return None
+
 
 @security_cli.command('update', help='fname, sname, email, pass and role')
 @click.command(context_settings=dict(ignore_unknown_options=True,))

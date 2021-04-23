@@ -34,7 +34,7 @@ class SecurityManager(SecurityManager__Settings,
         self._add_url_routes(app)
         from .cli import security_cli
         app.cli.add_command(security_cli)
-        return None
+        return self
 
     def _add_url_routes(self, app):
 
