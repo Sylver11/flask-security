@@ -11,18 +11,18 @@ class SecurityManager(SecurityManager__Settings,
 
     def __init__(self, app=None, datastore=None):
         self.app = app
-        self._state = None
+        self.state = None
         if app is not None and datastore is not None:
-            self._state = self.init_app(app, datastore)
-            app.extensions["security"] = self._state
+            self.state = self.init_app(app, datastore)
+            app.extensions["security"] = self.state
 
     def init_app(self, app, datastore):
-        self._datastore = datastore
+        self.datastore = datastore
         self.login_manager = LoginManager(app)
         self.login_manager.login_view = 'flask_security_bp.login'
         @self.login_manager.user_loader
         def load_user(uuid):
-            return self._datastore.get_user_by_uuid(uuid)
+            return self.datastore.get_user_by_uuid(uuid)
 
         flask_security = Blueprint(
                 'flask_security_bp',
