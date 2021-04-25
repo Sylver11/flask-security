@@ -17,31 +17,38 @@ class Datastore:
         from sqlalchemy.exc import SQLAlchemyError
         try:
             self.db.session.commit()
-            return True
+            return True, 'Success'
         except IntegrityError as err:
             self.db.session.rollback()
-            current_app.logger.error(err)
-            return 'Integrity Error: Either duplication or foreign key error'
+            current_app.logger.warning(err)
+            return False, err
         except SQLAlchemyError as err:
             self.db.session.rollback()
             current_app.logger.error(err)
-            return 'Fatal database error: Server Admin was informed'
-        return 'Unkown error occured'
+            return False, err
+        return False, 'Unkown error occured'
+
+
+    def _commit_and_update_model(self, model):
+        status, response = self._commit()
+        model.query_status = status
+        model.query_response = response
+        return model
 
     def add_model(self, model):
         self._put(model)
-        status = self._commit()
-        return model if status else status
+        model.query_type = 'insert'
+        return self._commit_and_update_model(model)
 
     def update_model(self, model):
         self._update(model)
-        status = self._commit()
-        return model if status else status
+        model.query_type = 'update'
+        return self._commit_and_update_model(model)
 
     def delete_model(self, model):
         self._delete(model)
-        status = self._commit()
-        return None if status else status
+        model.query_type = 'delete'
+        return self._commit_and_update_model(model)
 
 
 class UserDatastore(Datastore):
@@ -70,11 +77,11 @@ class UserDatastore(Datastore):
     def update_user_by_model(self, model: User) -> User:
         return self.update_model(model)
 
-    def delete_user_by_email(self, email: str) -> None:
+    def delete_user_by_email(self, email: str) -> User:
         model = self.get_user_by_email(email)
         return self.delete_model(model)
 
-    def delete_user_by_model(self, model: User) -> None:
+    def delete_user_by_model(self, model: User) -> User:
         return self.delete_model(model)
 
     def get_group_by_name(self, name: str):
@@ -89,7 +96,7 @@ class UserDatastore(Datastore):
     def update_group_by_model(self, group: Group) -> Group:
         return self.update_model(group)
 
-    def delete_group_by_model(self, group: Group) -> None:
+    def delete_group_by_model(self, group: Group) -> Group:
         return self.delete_model(group)
 
     def get_role_by_name(self, name: str):
