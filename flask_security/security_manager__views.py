@@ -9,7 +9,7 @@ class SecurityManager__Views(object):
         if request.method == 'POST':
             email = request.form['email']
             password = request.form['password']
-            user = self._datastore.get_user_by_email(email)
+            user = self.datastore.get_user_by_email(email)
             if not user:
                 current_app.logger.info('%s does not exist', email)
                 return jsonify({
@@ -22,7 +22,7 @@ class SecurityManager__Views(object):
             if user.check_password(password):
                 login_user(user)
                 user.authenticated = True
-                self._datastore.update_user(user)
+                self.datastore.update_user_by_model(user)
                 return jsonify({
                     'status': 200,
                     'redirect': True,
@@ -43,7 +43,7 @@ class SecurityManager__Views(object):
 
     def logout_view(self):
         current_user.authenticated = False
-        self._datastore.update_user(current_user)
+        self.datastore.update_user_by_model(current_user)
         logout_user()
         return redirect(self.FLASK_SECURITY_AFTER_LOGOUT_URL)
 
