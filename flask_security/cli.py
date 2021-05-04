@@ -31,35 +31,6 @@ def check_if_duplicate_role_cli(ctx, param, name):
     return name
 
 
-@security_cli.command('show-user-detail')
-@click.option('--email', prompt='User email',required=True)
-def get_user_info_cli(email):
-    user = datastore.get_user_by_email(email)
-    if not user:
-        raise click.UsageError('The specified user does not exist')
-    click.echo(vars(user))
-
-
-@security_cli.command('add-group')
-@click.option('--group-name', prompt='Group Name',required=True)
-@click.option('--admin-email', prompt='Admin User Email',required=True)
-def add_group_cli(group_name, admin_email):
-    user = datastore.User.query.filter_by(email=admin_email).first()
-    if not user:
-        raise click.UsageError('User not found.')
-    group = datastore.Group(name=group_name, admin_uuid=user.uuid)
-    group = datastore.add_group_by_model(group)
-    if group.query_status:
-        user.add_groups(group)
-        user = datastore.update_user_by_model(user)
-        if user.query_status:
-            click.echo(user.query_response)
-        else:
-            raise click.UsageError(user.query_response)
-    else:
-        raise click.UsageError(group.query_response)
-
-
 @security_cli.command('add-user',)
 @click.option('--firstname',
         prompt='Firstname',
@@ -93,7 +64,71 @@ def add_user_cli(*args, **kwargs):
         raise click.UsageError(user.query_response)
 
 
-@security_cli.command('add-user-role',)
+@security_cli.command('update-user')
+@click.option('--email',
+        prompt='User Email',
+        callback=check_if_user_exists_cli,
+        required=True)
+def update_user_cli(email):
+    click.echo('Method not yet implemented')
+
+
+@security_cli.command('delete-user')
+@click.option('--email',
+        prompt='User Email',
+        callback=check_if_user_exists_cli)
+def delete_user_cli(*args, **kwargs):
+    user = datastore.delete_user_by_email(kwargs['email'])
+    if user.query_status:
+        click.echo(user.query_response)
+    else:
+        raise click.UsageError(user.query_response)
+
+
+@security_cli.command('update-user-password')
+@click.option('--email',
+        prompt='User Email',
+        callback=check_if_user_exists_cli,
+        required=True)
+def update_user_password(*args, **kwargs):
+    user = datastore.get_user_by_email(kwargs['email'])
+    user = datastore.update_user_by_model(user)
+    if user.query_status:
+        click.echo(user.query_response)
+    else:
+        raise click.UsageError(user.query_response)
+
+
+@security_cli.command('show-user-detail')
+@click.option('--email', prompt='User email',required=True)
+def get_user_info_cli(email):
+    user = datastore.get_user_by_email(email)
+    if not user:
+        raise click.UsageError('The specified user does not exist')
+    click.echo(vars(user))
+
+
+@security_cli.command('add-group')
+@click.option('--group-name', prompt='Group Name',required=True)
+@click.option('--admin-email', prompt='Admin User Email',required=True)
+def add_group_cli(group_name, admin_email):
+    user = datastore.User.query.filter_by(email=admin_email).first()
+    if not user:
+        raise click.UsageError('User not found.')
+    group = datastore.Group(name=group_name, admin_uuid=user.uuid)
+    group = datastore.add_group_by_model(group)
+    if group.query_status:
+        user.add_groups(group)
+        user = datastore.update_user_by_model(user)
+        if user.query_status:
+            click.echo(user.query_response)
+        else:
+            raise click.UsageError(user.query_response)
+    else:
+        raise click.UsageError(group.query_response)
+
+
+@security_cli.command('add-role',)
 @click.option(
         '--role-name',
         prompt='Role Name',
@@ -103,7 +138,7 @@ def add_user_cli(*args, **kwargs):
         '--role-description',
         prompt='Role Description',
         required=True)
-def add_user_role_cli(*args, **kwargs):
+def add_role_cli(*args, **kwargs):
     role = datastore.add_user_role(name=kwargs['role_name'],
             description=kwargs['role_description'])
     if role.query_status:
@@ -125,7 +160,7 @@ def get_all_roles_cli():
 @click.option('--role-name',
         prompt='Name of user role',
         required=True)
-def link_role_with_user(*args, **kwargs):
+def link_role_with_user_cli(*args, **kwargs):
     user = datastore.get_user_by_email(kwargs['email'])
     role = datastore.get_role_by_name(kwargs['role_name'])
     if not role:
@@ -138,37 +173,5 @@ def link_role_with_user(*args, **kwargs):
         raise click.UsageError(user.query_response)
 
 
-@security_cli.command('update-user-password')
-@click.option('--email',
-        prompt='User Email',
-        callback=check_if_user_exists_cli,
-        required=True)
-def update_user_password(*args, **kwargs):
-    user = datastore.get_user_by_email(kwargs['email'])
-    user = datastore.update_user_by_model(user)
-    if user.query_status:
-        click.echo(user.query_response)
-    else:
-        raise click.UsageError(user.query_response)
 
-
-@security_cli.command('update-user')
-@click.option('--email',
-        prompt='User Email',
-        callback=check_if_user_exists_cli,
-        required=True)
-def update_user_cli(email):
-    click.echo('Method not yet implemented')
-
-
-@security_cli.command('delete-user')
-@click.option('--email',
-        prompt='User Email',
-        callback=check_if_user_exists_cli)
-def delete_user_cli(*args, **kwargs):
-    user = datastore.delete_user_by_email(kwargs['email'])
-    if user.query_status:
-        click.echo(user.query_response)
-    else:
-        raise click.UsageError(user.query_response)
 

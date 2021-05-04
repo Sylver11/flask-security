@@ -1,157 +1,105 @@
-# -*- coding: utf-8 -*-
-"""
-    test_cli
-    ~~~~~~~~
-
-    Test command line interface.
-"""
-
 from click.testing import CliRunner
+from flask_security.cli import add_user_cli, update_user_cli,\
+        delete_user_cli,\
+        get_user_info_cli, add_group_cli, add_role_cli,\
+        get_all_roles_cli, link_role_with_user_cli
 
-from flask_security.cli import roles_add, roles_create, roles_remove, \
-    users_activate, users_create, users_deactivate
 
-
-def test_cli_createuser(script_info):
-    """Test create user CLI."""
+def test_cli_manage_user(script_info):
     runner = CliRunner()
 
     # Missing params
     result = runner.invoke(
-        users_create, input='1234\n1234\n', obj=script_info)
+        add_user_cli, input='1234\n1234\n', obj=script_info)
     assert result.exit_code != 0
 
-    # Create user with invalid email
+    # Create user
     result = runner.invoke(
-        users_create,
-        ['not-an-email', '--password', '123456'],
+        add_user_cli,
+        ['--firstname','Justus',
+            '--secondname', 'Voigt',
+            '--email', 'connectmaeuse@gmail.com',
+            '--password', '123456'],
+        obj=script_info
+    )
+    assert result.exit_code == 0
+
+    # Create same user again. Check for duplicate error
+    result = runner.invoke(
+        add_user_cli,
+        ['--firstname','Justus',
+            '--secondname', 'Voigt',
+            '--email', 'connectmaeuse@gmail.com',
+            '--password', '123456'],
         obj=script_info
     )
     assert result.exit_code == 2
 
-    # Create user
+    # Delete same user again
     result = runner.invoke(
-        users_create,
-        ['email@example.org', '--password', '123456'],
+        delete_user_cli,
+        ['--email', 'connectmaeuse@gmail.com'],
         obj=script_info
     )
     assert result.exit_code == 0
 
 
-def test_cli_createrole(script_info):
+def test_cli_manage_role(script_info):
     """Test create user CLI."""
     runner = CliRunner()
 
     # Missing params
     result = runner.invoke(
-        roles_create, ['-d', 'Test description'],
+        add_role_cli,
+        ['--role-name', 'superuser'],
         obj=script_info)
     assert result.exit_code != 0
 
     # Create role
     result = runner.invoke(
-        roles_create,
-        ['superusers', '-d', 'Test description'],
+        add_role_cli,
+        ['--role-name', 'superuser',
+            '--role-description', 'Test description'],
         obj=script_info)
     assert result.exit_code == 0
 
 
-def test_cli_addremove_role(script_info):
+def test_cli_manage_user_role_link(script_info):
     """Test add/remove role."""
-    runner = CliRunner()
-
-    # Create a user and a role
-    result = runner.invoke(
-        users_create,
-        ['a@example.org', '--password', '123456'],
-        obj=script_info
-    )
-    assert result.exit_code == 0
-    result = runner.invoke(roles_create, ['superuser'], obj=script_info)
-    assert result.exit_code == 0
-
-    # User not found
-    result = runner.invoke(
-        roles_add, ['inval@example.org', 'superuser'],
-        obj=script_info)
-    assert result.exit_code != 0
-
-    # Add:
-    result = runner.invoke(
-        roles_add, ['a@example.org', 'invalid'],
-        obj=script_info)
-    assert result.exit_code != 0
-
-    result = runner.invoke(
-        roles_remove, ['inval@example.org', 'superuser'],
-        obj=script_info)
-    assert result.exit_code != 0
-
-    # Remove:
-    result = runner.invoke(
-        roles_remove, ['a@example.org', 'invalid'],
-        obj=script_info)
-    assert result.exit_code != 0
-
-    result = runner.invoke(
-        roles_remove, ['b@example.org', 'superuser'],
-        obj=script_info)
-    assert result.exit_code != 0
-
-    result = runner.invoke(
-        roles_remove, ['a@example.org', 'superuser'],
-        obj=script_info)
-    assert result.exit_code != 0
-
-    # Add:
-    result = runner.invoke(roles_add,
-                           ['a@example.org', 'superuser'],
-                           obj=script_info)
-    assert result.exit_code == 0
-    result = runner.invoke(
-        roles_add,
-        ['a@example.org', 'superuser'],
-        obj=script_info)
-    assert result.exit_code != 0
-
-    # Remove:
-    result = runner.invoke(
-        roles_remove, ['a@example.org', 'superuser'],
-        obj=script_info)
-    assert result.exit_code == 0
-
-
-def test_cli_activate_deactivate(script_info):
-    """Test create user CLI."""
     runner = CliRunner()
 
     # Create a user
     result = runner.invoke(
-        users_create,
-        ['a@example.org', '--password', '123456'],
+        add_user_cli,
+        ['--firstname','Justus',
+            '--secondname', 'Voigt',
+            '--email', 'connectmaeuse@gmail.com',
+            '--password', '123456'],
         obj=script_info
     )
     assert result.exit_code == 0
 
-    # Activate
-    result = runner.invoke(users_activate, ['in@valid.org'],
-                           obj=script_info)
-    assert result.exit_code != 0
-    result = runner.invoke(users_deactivate, ['in@valid.org'],
-                           obj=script_info)
-    assert result.exit_code != 0
-
-    result = runner.invoke(users_activate, ['a@example.org'],
-                           obj=script_info)
-    assert result.exit_code == 0
-    result = runner.invoke(users_activate, ['a@example.org'],
-                           obj=script_info)
+    # Create role
+    result = runner.invoke(
+        add_role_cli,
+        ['--role-name', 'superuser',
+            '--role-description', 'Test description'],
+        obj=script_info)
     assert result.exit_code == 0
 
-    # Deactivate
-    result = runner.invoke(users_deactivate,
-                           ['a@example.org'], obj=script_info)
+    # User not found
+    result = runner.invoke(
+        link_role_with_user_cli,
+        ['--email','wrong_email@gmail.com',
+            '--role-name', 'superuser'],
+        obj=script_info)
+    assert result.exit_code != 0
+
+    # Link user with role
+    result = runner.invoke(
+        link_role_with_user_cli,
+        ['--email','connectmaeuse@gmail.com',
+            '--role-name', 'superuser'],
+        obj=script_info)
     assert result.exit_code == 0
-    result = runner.invoke(users_deactivate,
-                           ['a@example.org'], obj=script_info)
-    assert result.exit_code == 0
+
